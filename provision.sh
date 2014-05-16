@@ -110,8 +110,11 @@ then
     " >> /var/www/.htaccess
 
     # symlink uploads folder
-    rm -rf /var/www/wp-content
-    ln -fs /vagrant/wp-content /var/www/wp-content
+    if [ ! -d /vagrant/wp-content ];
+    then
+        rm -rf /var/www/wp-content
+        ln -fs /vagrant/wp-content /var/www/wp-content
+    fi
 fi
 
 
