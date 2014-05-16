@@ -30,7 +30,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.hostname = "wordpress.dev"
 
   # set write permissions for wordpress
-  config.vm.synced_folder ".", "/var/www", :mount_options => ['dmode=774','fmode=775']
+  config.vm.synced_folder ".", "/vagrant", :mount_options => ['dmode=774','fmode=775']
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on

@@ -12,7 +12,7 @@ echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_PASSWORD
 
 # install apache, mysql, php
 apt-get update
-apt-get install -y apache2 mysql-server-5.5 php5-mysql php5 #phpmyadmin
+apt-get install -y apache2 mysql-server-5.5 php5-mysql php5 git curl
 
 # configure Apache
 if [ ! -f /var/log/apachesetup ];
@@ -62,14 +62,58 @@ then
 fi
 
 # configure phpmyadmin
-echo 'phpmyadmin phpmyadmin/dbconfig-install boolean true' | debconf-set-selections
-echo 'phpmyadmin phpmyadmin/app-password-confirm password $MYSQL_PASSWORD' | debconf-set-selections
-echo 'phpmyadmin phpmyadmin/mysql/admin-pass password $MYSQL_PASSWORD' | debconf-set-selections
-echo 'phpmyadmin phpmyadmin/mysql/app-pass password $MYSQL_PASSWORD' | debconf-set-selections
-echo 'phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2' | debconf-set-selections
+echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/app-password-confirm password $MYSQL_PASSWORD" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/admin-pass password $MYSQL_PASSWORD" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/app-pass password $MYSQL_PASSWORD" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf-set-selections
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y phpmyadmin 
+
+# configure wordpress
+if [ ! -f /var/www/wp-config.php ];
+then
+    # install latest wordpress from git repo
+    rm -rf /var/www
+    git clone https://github.com/WordPress/WordPress /var/www
+
+    cd /var/www
+    latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
+    git checkout tags/$latestTag
+
+    # create wp-config
+    cp /var/www/wp-config-sample.php /var/www/wp-config.php
+
+    sed -i "s/database_name_here/$WORDPRESS_DB/" /var/www/wp-config.php
+    sed -i "s/username_here/$WORDPRESS_USER/" /var/www/wp-config.php
+    sed -i "s/password_here/$WORDPRESS_PASSWORD/" /var/www/wp-config.php
+
+    # replace generic salt values
+    wget -O /usr/local/src/wp.keys https://api.wordpress.org/secret-key/1.1/salt/
+    sed -i '/#@-/r /usr/local/src/wp.keys' /var/www/wp-config.php
+    sed -i "/#@+/,/#@-/d" /var/www/wp-config.php
+
+    # creat htaccess?
+    echo "
+    # BEGIN WordPress
+    <IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteRule ^index\.php$ - [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . /index.php [L]
+    </IfModule>
+
+    # END WordPress
+    " >> /var/www/.htaccess
+
+    # symlink uploads folder
+    rm -rf /var/www/wp-content
+    ln -fs /vagrant/wp-content /var/www/wp-content
+fi
+
 
 # restart apache
 sudo service apache2 restart
