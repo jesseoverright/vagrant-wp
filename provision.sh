@@ -19,6 +19,10 @@ if [ ! -f /var/log/apachesetup ];
 then
     # add www-data to vagrant group
     usermod -a -G vagrant www-data
+
+    # symlink www folder
+    rm -rf /var/www
+    ln -fs /vagrant/www /var/www
     
     # enable mod rewrite
     a2enmod rewrite
