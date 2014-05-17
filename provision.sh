@@ -57,7 +57,7 @@ then
 
     if [ -f /vagrant/content.sql ];
     then
-        mysql -uroot -p$MYSQL_PASSWORD wordpress < /vagrant/content.sql
+        mysql -uroot -p$MYSQL_PASSWORD $WORDPRESS_DB < /vagrant/content.sql
     fi
 fi
 
