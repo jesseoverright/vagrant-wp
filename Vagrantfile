@@ -19,9 +19,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   config.vm.network "private_network", ip: "192.168.33.10"
-  config.vm.hostname = "wordpress.dev"
+  config.vm.hostname = "lamp.dev"
 
   # set write permissions for wordpress
-  config.vm.synced_folder ".", "/vagrant", :mount_options => ['dmode=774','fmode=775']
+  config.vm.synced_folder ".", "/var/www", :mount_options => ['dmode=774','fmode=775']
   
 end

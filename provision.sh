@@ -2,9 +2,9 @@
 
 # variables passed from Vagrantfile
 MYSQL_PASSWORD="rootpass"
-WORDPRESS_USER="wordpress"
-WORDPRESS_PASSWORD="wordpress"
-WORDPRESS_DB="wordpress"
+DATABASE_USER="mysql_db"
+DATABASE_PASSWORD="mysql_db"
+DATABASE_DB="mysql_db"
 
 # set mysql root password
 echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_PASSWORD" | debconf-set-selections
@@ -25,7 +25,7 @@ then
     sed -i '/AllowOverride None/c AllowOverride All' /etc/apache2/sites-available/default
 
     # configure httpd.conf
-    echo "ServerName wordpress.dev" >> /etc/apache2/httpd.conf
+    echo "ServerName lamp.dev" >> /etc/apache2/httpd.conf
 
     touch /var/log/apachesetup
 fi
@@ -48,16 +48,16 @@ fi
 # set up the database
 if [ ! -f /var/log/databasesetup ];
 then
-    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE USER '$WORDPRESS_USER'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'"
-    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE $WORDPRESS_DB"
-    mysql -uroot -p$MYSQL_PASSWORD -e "GRANT ALL ON $WORDPRESS_DB.* TO '$WORDPRESS_USER'@'localhost'"
+    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE USER '$DATABASE_USER'@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD'"
+    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE $DATABASE_DB"
+    mysql -uroot -p$MYSQL_PASSWORD -e "GRANT ALL ON $DATABASE_DB.* TO '$DATABASE_USER'@'localhost'"
     mysql -uroot -p$MYSQL_PASSWORD -e "flush privileges"
 
     touch /var/log/databasesetup
 
-    if [ -f /vagrant/content.sql ];
+    if [ -f /var/www/database.sql ];
     then
-        mysql -uroot -p$MYSQL_PASSWORD wordpress < /vagrant/content.sql
+        mysql -uroot -p$MYSQL_PASSWORD $DATABASE_DB < /var/www/database.sql
     fi
 fi
 
@@ -70,53 +70,6 @@ echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y phpmyadmin 
-
-# configure wordpress
-if [ ! -f /var/www/wp-config.php ];
-then
-    # install latest wordpress from git repo
-    rm -rf /var/www
-    git clone https://github.com/WordPress/WordPress /var/www
-
-    cd /var/www
-    latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-    git checkout tags/$latestTag
-
-    # create wp-config
-    cp /var/www/wp-config-sample.php /var/www/wp-config.php
-
-    sed -i "s/database_name_here/$WORDPRESS_DB/" /var/www/wp-config.php
-    sed -i "s/username_here/$WORDPRESS_USER/" /var/www/wp-config.php
-    sed -i "s/password_here/$WORDPRESS_PASSWORD/" /var/www/wp-config.php
-
-    # replace generic salt values
-    wget -O /usr/local/src/wp.keys https://api.wordpress.org/secret-key/1.1/salt/
-    sed -i '/#@-/r /usr/local/src/wp.keys' /var/www/wp-config.php
-    sed -i "/#@+/,/#@-/d" /var/www/wp-config.php
-
-    # creat htaccess?
-    echo "
-    # BEGIN WordPress
-    <IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteBase /
-    RewriteRule ^index\.php$ - [L]
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule . /index.php [L]
-    </IfModule>
-
-    # END WordPress
-    " >> /var/www/.htaccess
-
-    # symlink uploads folder
-    if [ -d /vagrant/wp-content ];
-    then
-        rm -rf /var/www/wp-content
-        ln -fs /vagrant/wp-content /var/www/wp-content
-    fi
-fi
-
 
 # restart apache
 sudo service apache2 restart
