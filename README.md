@@ -29,11 +29,11 @@ After Vagrant has created the development environment, Wordpress will be availab
 
 # Server Details
 
-Vagrant-WP creates a Ubuntu 12.04 LTS (Precise Pangolin) development server with the following installed:
+Vagrant-WP creates a Ubuntu 14.04 LTS (Trusty Tahr) development server with the following installed:
 
-- Apache 2
+- Apache 2.4
 - MySQL 5.5
-- PHP 5.3.10
+- PHP 5.5.9
 - PhpMyAdmin
 - Git
 - Curl
