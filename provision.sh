@@ -2,9 +2,9 @@
 
 # variables passed from Vagrantfile
 MYSQL_PASSWORD="rootpass"
-WORDPRESS_USER="wordpress"
-WORDPRESS_PASSWORD="wordpress"
-WORDPRESS_DB="wordpress"
+DATABASE_USER="mysql_db"
+DATABASE_PASSWORD="mysql_db"
+DATABASE_DB="mysql_db"
 
 # set mysql root password
 echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_PASSWORD" | debconf-set-selections
@@ -21,15 +21,15 @@ then
     usermod -a -G vagrant www-data
 
     # symlink www folder
-    rm -rf /var/www
-    ln -fs /vagrant/www /var/www
+    rm -rf /var/www/html
+    ln -fs /vagrant/www /var/www/html
     
     # enable mod rewrite
     a2enmod rewrite
-    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n    <Directory "\/var\/www\/html">\n        AllowOverride All\n    <\/Directory>/' /etc/apache2/sites-available/000-default.conf
+    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n        <Directory "\/var\/www\/html">\n            AllowOverride All\n        <\/Directory>/' /etc/apache2/sites-available/000-default.conf
 
     # configure httpd.conf
-    echo "ServerName wordpress.dev" >> /etc/apache2/httpd.conf
+    echo "ServerName lamp.dev" >> /etc/apache2/httpd.conf
 
     touch /var/log/apachesetup
 fi
@@ -52,16 +52,16 @@ fi
 # set up the database
 if [ ! -f /var/log/databasesetup ];
 then
-    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE USER '$WORDPRESS_USER'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'"
-    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE $WORDPRESS_DB"
-    mysql -uroot -p$MYSQL_PASSWORD -e "GRANT ALL ON $WORDPRESS_DB.* TO '$WORDPRESS_USER'@'localhost'"
+    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE USER '$DATABASE_USER'@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD'"
+    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE $DATABASE_DB"
+    mysql -uroot -p$MYSQL_PASSWORD -e "GRANT ALL ON $DATABASE_DB.* TO '$DATABASE_USER'@'localhost'"
     mysql -uroot -p$MYSQL_PASSWORD -e "flush privileges"
 
     touch /var/log/databasesetup
 
-    if [ -f /vagrant/content.sql ];
+    if [ -f /vagrant/database.sql ];
     then
-        mysql -uroot -p$MYSQL_PASSWORD $WORDPRESS_DB < /vagrant/content.sql
+        mysql -uroot -p$MYSQL_PASSWORD $DATABASE_DB < /vagrant/database.sql
     fi
 fi
 
@@ -74,53 +74,6 @@ echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y phpmyadmin 
-
-# configure wordpress
-if [ ! -f /var/www/html/wp-config.php ];
-then
-    # install latest wordpress from git repo
-    rm -rf /var/www/html
-    git clone https://github.com/WordPress/WordPress /var/www/html
-
-    cd /var/www/html
-    latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-    git checkout tags/$latestTag
-
-    # create wp-config
-    cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
-
-    sed -i "s/database_name_here/$WORDPRESS_DB/" /var/www/html/wp-config.php
-    sed -i "s/username_here/$WORDPRESS_USER/" /var/www/html/wp-config.php
-    sed -i "s/password_here/$WORDPRESS_PASSWORD/" /var/www/html/wp-config.php
-
-    # replace generic salt values
-    curl https://api.wordpress.org/secret-key/1.1/salt >> /usr/local/src/wp.keys
-    sed -i '/#@-/r /usr/local/src/wp.keys' /var/www/html/wp-config.php
-    sed -i "/#@+/,/#@-/d" /var/www/html/wp-config.php
-
-    # creat htaccess?
-    echo "
-    # BEGIN WordPress
-    <IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteBase /
-    RewriteRule ^index\.php$ - [L]
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule . /index.php [L]
-    </IfModule>
-
-    # END WordPress
-    " >> /var/www/html/.htaccess
-
-    # symlink uploads folder
-    if [ -d /vagrant/wp-content ];
-    then
-        rm -rf /var/www/html/wp-content
-        ln -fs /vagrant/wp-content /var/www/html/wp-content
-    fi
-fi
-
 
 # restart apache
 sudo service apache2 restart
