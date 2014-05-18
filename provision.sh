@@ -22,7 +22,7 @@ then
     
     # enable mod rewrite
     a2enmod rewrite
-    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n    <Directory "\/var\/www\/html">\n        AllowOverride All\n    <\/Directory>/' /etc/apache2/sites-available/000-default.conf
+    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n        <Directory "\/var\/www\/html">\n            AllowOverride All\n        <\/Directory>/' /etc/apache2/sites-available/000-default.conf
 
     # configure httpd.conf
     echo "ServerName wordpress.dev" >> /etc/apache2/httpd.conf
