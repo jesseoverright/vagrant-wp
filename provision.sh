@@ -26,7 +26,7 @@ then
     
     # enable mod rewrite
     a2enmod rewrite
-    sed -i '/AllowOverride None/c AllowOverride All' /etc/apache2/sites-available/default
+    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n    <Directory "\/var\/www\/html">\n        AllowOverride All\n    <\/Directory>/' /etc/apache2/sites-available/000-default.conf
 
     # configure httpd.conf
     echo "ServerName wordpress.dev" >> /etc/apache2/httpd.conf
@@ -76,27 +76,27 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get install -y phpmyadmin 
 
 # configure wordpress
-if [ ! -f /var/www/wp-config.php ];
+if [ ! -f /var/www/html/wp-config.php ];
 then
     # install latest wordpress from git repo
-    rm -rf /var/www
-    git clone https://github.com/WordPress/WordPress /var/www
+    rm -rf /var/www/html
+    git clone https://github.com/WordPress/WordPress /var/www/html
 
-    cd /var/www
+    cd /var/www/html
     latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
     git checkout tags/$latestTag
 
     # create wp-config
-    cp /var/www/wp-config-sample.php /var/www/wp-config.php
+    cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
 
-    sed -i "s/database_name_here/$WORDPRESS_DB/" /var/www/wp-config.php
-    sed -i "s/username_here/$WORDPRESS_USER/" /var/www/wp-config.php
-    sed -i "s/password_here/$WORDPRESS_PASSWORD/" /var/www/wp-config.php
+    sed -i "s/database_name_here/$WORDPRESS_DB/" /var/www/html/wp-config.php
+    sed -i "s/username_here/$WORDPRESS_USER/" /var/www/html/wp-config.php
+    sed -i "s/password_here/$WORDPRESS_PASSWORD/" /var/www/html/wp-config.php
 
     # replace generic salt values
-    wget -O /usr/local/src/wp.keys https://api.wordpress.org/secret-key/1.1/salt/
-    sed -i '/#@-/r /usr/local/src/wp.keys' /var/www/wp-config.php
-    sed -i "/#@+/,/#@-/d" /var/www/wp-config.php
+    curl https://api.wordpress.org/secret-key/1.1/salt >> /usr/local/src/wp.keys
+    sed -i '/#@-/r /usr/local/src/wp.keys' /var/www/html/wp-config.php
+    sed -i "/#@+/,/#@-/d" /var/www/html/wp-config.php
 
     # creat htaccess?
     echo "
@@ -111,13 +111,13 @@ then
     </IfModule>
 
     # END WordPress
-    " >> /var/www/.htaccess
+    " >> /var/www/html/.htaccess
 
     # symlink uploads folder
     if [ -d /vagrant/wp-content ];
     then
-        rm -rf /var/www/wp-content
-        ln -fs /vagrant/wp-content /var/www/wp-content
+        rm -rf /var/www/html/wp-content
+        ln -fs /vagrant/wp-content /var/www/html/wp-content
     fi
 fi
 
