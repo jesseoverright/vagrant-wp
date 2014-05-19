@@ -28,8 +28,11 @@ then
     a2enmod rewrite
     sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n        <Directory "\/var\/www\/html">\n            AllowOverride All\n        <\/Directory>/' /etc/apache2/sites-available/000-default.conf
 
-    # configure httpd.conf
-    echo "ServerName lamp.dev" >> /etc/apache2/httpd.conf
+    # configure ServerName
+    echo 'ServerName lamp.dev' >> /etc/apache2/conf-available/servername.conf
+    a2enconf servername
+
+    sed -i 's/#ServerName www.example.com/ServerName lamp.dev/' /etc/apache2/sites-available/000-default.conf
 
     touch /var/log/apachesetup
 fi
