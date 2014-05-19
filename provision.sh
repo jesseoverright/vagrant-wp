@@ -24,8 +24,11 @@ then
     a2enmod rewrite
     sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n        <Directory "\/var\/www\/html">\n            AllowOverride All\n        <\/Directory>/' /etc/apache2/sites-available/000-default.conf
 
-    # configure httpd.conf
-    echo "ServerName wordpress.dev" >> /etc/apache2/httpd.conf
+    # configure ServerName
+    echo 'ServerName wordpress.dev' >> /etc/apache2/conf-available/servername.conf
+    a2enconf servername
+
+    sed -i 's/#ServerName www.example.com/ServerName wordpress.dev/' /etc/apache2/sites-available/000-default.conf
 
     touch /var/log/apachesetup
 fi
@@ -90,7 +93,7 @@ then
     sed -i "s/password_here/$WORDPRESS_PASSWORD/" /var/www/html/wp-config.php
 
     # replace generic salt values
-    curl https://api.wordpress.org/secret-key/1.1/salt >> /usr/local/src/wp.keys
+    curl -s https://api.wordpress.org/secret-key/1.1/salt >> /usr/local/src/wp.keys
     sed -i '/#@-/r /usr/local/src/wp.keys' /var/www/html/wp-config.php
     sed -i "/#@+/,/#@-/d" /var/www/html/wp-config.php
 
