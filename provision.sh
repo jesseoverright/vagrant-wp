@@ -34,7 +34,7 @@ then
 fi
 
 # configure php
-if [ -f /var/log/phpsetup ];
+if [ ! -f /var/log/phpsetup ];
 then
 
     # increase file upload limits
