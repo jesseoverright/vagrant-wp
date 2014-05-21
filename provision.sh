@@ -12,7 +12,7 @@ echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_PASSWORD
 
 # install apache, mysql, php
 apt-get update
-apt-get install -y apache2 mysql-server-5.5 php5-mysql php5 git curl
+apt-get install -y apache2 mysql-server-5.5 php5-mysql php5 php5-mcrypt git curl
 
 # configure Apache
 if [ ! -f /var/log/apachesetup ];
@@ -48,6 +48,10 @@ then
     # turn on error reporting
     sed -i 's/error_reporting = .*/error_reporting = E_ALL/' /etc/php5/apache2/php.ini
     sed -i 's/display_errors = .*/display_errors = On/' /etc/php5/apache2/php.ini
+
+    # install composer
+    curl -sS https://getcomposer.org/installer | php
+    mv composer.phar /usr/local/bin/composer
 
     touch /var/log/phpsetup
 fi
