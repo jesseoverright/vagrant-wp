@@ -37,6 +37,9 @@ fi
 if [ ! -f /var/log/phpsetup ];
 then
 
+    # enable mcrypt
+    php5enmod mcrypt
+
     # increase file upload limits
     sed -i 's/upload_max_filesize = .*/upload_max_filesize = 20M/g' /etc/php5/apache2/php.ini
     sed -i 's/post_max_size = .*/post_max_size = 20M/g' /etc/php5/apache2/php.ini
