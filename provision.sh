@@ -2,9 +2,9 @@
 
 # variables passed from Vagrantfile
 MYSQL_PASSWORD="rootpass"
-DATABASE_USER="mysql_db"
-DATABASE_PASSWORD="mysql_db"
-DATABASE_DB="mysql_db"
+DATABASE_USER="mysql"
+DATABASE_PASSWORD="mysql"
+DATABASE_DB="mysql"
 
 # set mysql root password
 echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_PASSWORD" | debconf-set-selections
