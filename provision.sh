@@ -23,7 +23,7 @@ then
 
     # symlink www folder
     rm -rf /var/www/html
-    ln -fs /vagrant/www/public /var/www/html
+    ln -fs /vagrant/www /var/www/html
     
     # enable mod rewrite
     a2enmod rewrite
