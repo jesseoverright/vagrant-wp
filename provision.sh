@@ -5,6 +5,7 @@ MYSQL_PASSWORD="rootpass"
 WORDPRESS_USER="wordpress"
 WORDPRESS_PASSWORD="wordpress"
 WORDPRESS_DB="wordpress"
+SERVERNAME="wordpress.dev"
 
 # set mysql root password
 echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_PASSWORD" | debconf-set-selections
@@ -25,10 +26,10 @@ then
     sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n        <Directory "\/var\/www\/html">\n            AllowOverride All\n        <\/Directory>/' /etc/apache2/sites-available/000-default.conf
 
     # configure ServerName
-    echo 'ServerName wordpress.dev' >> /etc/apache2/conf-available/servername.conf
+    echo "ServerName $SERVERNAME" >> /etc/apache2/conf-available/servername.conf
     a2enconf servername
 
-    sed -i 's/#ServerName www.example.com/ServerName wordpress.dev/' /etc/apache2/sites-available/000-default.conf
+    sed -i "s/#ServerName www.example.com/ServerName $SERVERNAME/" /etc/apache2/sites-available/000-default.conf
 
     touch /var/log/apachesetup
 fi
