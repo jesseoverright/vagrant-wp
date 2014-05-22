@@ -5,6 +5,7 @@ MYSQL_PASSWORD="rootpass"
 DATABASE_USER="mysqldb"
 DATABASE_PASSWORD="mysqldb"
 DATABASE_DB="mysqldb"
+SERVERNAME="lamp.dev"
 
 # set mysql root password
 echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_PASSWORD" | debconf-set-selections
@@ -29,10 +30,17 @@ then
     sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n        <Directory "\/var\/www\/html">\n            AllowOverride All\n        <\/Directory>/' /etc/apache2/sites-available/000-default.conf
 
     # configure ServerName
+<<<<<<< HEAD
     echo 'ServerName lamp.dev' >> /etc/apache2/conf-available/servername.conf
     a2enconf servername
 
     sed -i 's/#ServerName www.example.com/ServerName lamp.dev/' /etc/apache2/sites-available/000-default.conf
+=======
+    echo "ServerName $SERVERNAME" >> /etc/apache2/conf-available/servername.conf
+    a2enconf servername
+
+    sed -i "s/#ServerName www.example.com/ServerName $SERVERNAME/" /etc/apache2/sites-available/000-default.conf
+>>>>>>> origin
 
     touch /var/log/apachesetup
 fi
