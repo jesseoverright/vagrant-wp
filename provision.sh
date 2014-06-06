@@ -1,15 +1,14 @@
 #! /usr/bin/env bash
 
-# variables passed from Vagrantfile
-MYSQL_PASSWORD="rootpass"
+# variables for mysql & server
 WORDPRESS_USER="wordpress"
 WORDPRESS_PASSWORD="wordpress"
 WORDPRESS_DB="wordpress"
 SERVERNAME="wordpress.dev"
 
 # set mysql root password
-echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_PASSWORD" | debconf-set-selections
-echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_PASSWORD" | debconf-set-selections
+echo "mysql-server-5.5 mysql-server/root_password password rootpass" | debconf-set-selections
+echo "mysql-server-5.5 mysql-server/root_password_again password rootpass" | debconf-set-selections
 
 # install apache, mysql, php
 apt-get update
@@ -59,24 +58,32 @@ fi
 # set up the database
 if [ ! -f /var/log/databasesetup ];
 then
-    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE USER '$WORDPRESS_USER'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'"
-    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE $WORDPRESS_DB"
-    mysql -uroot -p$MYSQL_PASSWORD -e "GRANT ALL ON $WORDPRESS_DB.* TO '$WORDPRESS_USER'@'localhost'"
-    mysql -uroot -p$MYSQL_PASSWORD -e "flush privileges"
+    mysql -uroot -prootpass -e "CREATE USER '$WORDPRESS_USER'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'"
+    mysql -uroot -prootpass -e "CREATE DATABASE $WORDPRESS_DB"
+    mysql -uroot -prootpass -e "GRANT ALL ON $WORDPRESS_DB.* TO '$WORDPRESS_USER'@'localhost'"
+    mysql -uroot -prootpass -e "flush privileges"
 
     touch /var/log/databasesetup
 
-    if [ -f /vagrant/content.sql ];
+    if [ -f /vagrant/database.sql ];
     then
-        mysql -uroot -p$MYSQL_PASSWORD $WORDPRESS_DB < /vagrant/content.sql
+        mysql -uroot -prootpass $WORDPRESS_DB < /vagrant/database.sql
+    fi
+
+    # add db_backup to bin
+    if [ -f /vagrant/db_backup ]; then
+        if [ ! -d /home/vagrant/bin ]; then
+            mkdir /home/vagrant/bin
+        fi
+        ln -fs /vagrant/db_backup /home/vagrant/bin/db_backup
     fi
 fi
 
 # configure phpmyadmin
 echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/app-password-confirm password $MYSQL_PASSWORD" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/admin-pass password $MYSQL_PASSWORD" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/app-pass password $MYSQL_PASSWORD" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/app-password-confirm password rootpass" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/admin-pass password rootpass" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/app-pass password rootpass" | debconf-set-selections
 echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf-set-selections
 
 export DEBIAN_FRONTEND=noninteractive

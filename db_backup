@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+mysql -uroot -prootpass -e 'show databases' | \
+grep -v -F "information_schema" | \
+grep -v -F "performance_schema" | \
+grep -v -F "mysql" | \
+grep -v -F "test" | \
+grep -v -F "Database" | \
+grep -v -F "phpmyadmin" | \
+while read dbname; do mysqldump -u"$dbname" -p"$dbname" "$dbname" > /vagrant/"$dbname".sql; done
