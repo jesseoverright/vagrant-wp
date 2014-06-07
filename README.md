@@ -5,15 +5,17 @@ Vagrant-WP is a Vagrant configuration for creating and provisioning a LAMP stack
 # Getting Started
 
 ## Requirements
-Your machine needs to have [VirtualBox](http://www.virtualbox.org) and [Vagrant](http://www.vagrantup.com) installed. If you want Vagrant to automatically update your hosts file, install the [hostsupdater](https://github.com/cogitatio/vagrant-hostsupdater) Vagrant plugin.
+Your machine needs to have [VirtualBox](http://www.virtualbox.org) and [Vagrant](http://www.vagrantup.com) installed. If you want Vagrant to automatically update your hosts file, install the [hostsupdater](https://github.com/cogitatio/vagrant-hostsupdater) Vagrant plugin. For automatic database backups, install the [Triggers](https://github.com/emyl/vagrant-triggers) Vagrant plugin.
 
 ## Configuring WordPress
 
-Vagrant-WP will automatically install the latest version of Wordpress and configure wp-config.php. It will create a `wordpress` user with password `wordpress` and database `wordpress`.
+Vagrant-WP will automatically install the latest version of Wordpress and configure wp-config.php. It will create a `wordpress` user with password `wordpress` and database `wordpress`. 
 
 ### WP Database
 
-Vagrant-WP will import `content.sql` from the parent directory into the database if the file exists. You can change the default MySQL root password (`rootpass`) or wordpress database credentials by editing the variables in `provision.sh`.
+Vagrant-WP will import `database.sql` from the parent directory into the database if the file exists. You can change the wordpress database credentials by editing the variables in `provision.sh`.
+
+If the Vagrant Triggers plugin has been installed, Vagrant will automatically backup the database into `database.sql` when you issue the `vagrant destroy` command.
 
 ### wp-content
 
