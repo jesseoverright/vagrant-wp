@@ -9,7 +9,7 @@ Your machine needs to have [VirtualBox](http://www.virtualbox.org) and [Vagrant]
 
 ## Configuring WordPress
 
-Vagrant-WP will automatically install the latest version of Wordpress and configure wp-config.php. It will create a `wordpress` user with password `wordpress` and database `wordpress`. 
+Vagrant-WP will automatically install the latest version of Wordpress and configure wp-config.php. It will create a `wordpress` user with password `wordpress` and database `wordpress`.  The mysql root account password is set to `rootpass`.
 
 ### WP Database
 

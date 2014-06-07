@@ -27,7 +27,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # register vagrant trigger to backup database on 'vagrant destroy'
   if defined? VagrantPlugins::Triggers
     config.trigger.before :destroy, :stdout => true do
-      run "vagrant ssh -c 'backup_db'"
+      run "vagrant ssh -c 'db_backup'"
     end
   end
   

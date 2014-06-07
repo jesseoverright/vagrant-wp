@@ -1,14 +1,11 @@
 #! /usr/bin/env bash
 
-# variables for mysql & server
-WORDPRESS_USER="wordpress"
-WORDPRESS_PASSWORD="wordpress"
-WORDPRESS_DB="wordpress"
-SERVERNAME="wordpress.dev"
+# load database settings
+. /vagrant/settings.sh
 
 # set mysql root password
-echo "mysql-server-5.5 mysql-server/root_password password rootpass" | debconf-set-selections
-echo "mysql-server-5.5 mysql-server/root_password_again password rootpass" | debconf-set-selections
+echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
+echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
 
 # install apache, mysql, php
 apt-get update
@@ -58,16 +55,16 @@ fi
 # set up the database
 if [ ! -f /var/log/databasesetup ];
 then
-    mysql -uroot -prootpass -e "CREATE USER '$WORDPRESS_USER'@'localhost' IDENTIFIED BY '$WORDPRESS_PASSWORD'"
-    mysql -uroot -prootpass -e "CREATE DATABASE $WORDPRESS_DB"
-    mysql -uroot -prootpass -e "GRANT ALL ON $WORDPRESS_DB.* TO '$WORDPRESS_USER'@'localhost'"
-    mysql -uroot -prootpass -e "flush privileges"
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE USER '$DATABASE_USER'@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD'"
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE $DATABASE_NAME"
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL ON $DATABASE_NAME.* TO '$DATABASE_USER'@'localhost'"
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "flush privileges"
 
     touch /var/log/databasesetup
 
     if [ -f /vagrant/database.sql ];
     then
-        mysql -uroot -prootpass $WORDPRESS_DB < /vagrant/database.sql
+        mysql -uroot -p$MYSQL_ROOT_PASSWORD $DATABASE_NAME < /vagrant/database.sql
     fi
 
     # add db_backup to bin
@@ -81,9 +78,9 @@ fi
 
 # configure phpmyadmin
 echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/app-password-confirm password rootpass" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/admin-pass password rootpass" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/app-pass password rootpass" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/app-password-confirm password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/admin-pass password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/app-pass password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
 echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf-set-selections
 
 export DEBIAN_FRONTEND=noninteractive
@@ -103,9 +100,9 @@ then
     # create wp-config
     cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
 
-    sed -i "s/database_name_here/$WORDPRESS_DB/" /var/www/html/wp-config.php
-    sed -i "s/username_here/$WORDPRESS_USER/" /var/www/html/wp-config.php
-    sed -i "s/password_here/$WORDPRESS_PASSWORD/" /var/www/html/wp-config.php
+    sed -i "s/database_name_here/$DATABASE_NAME/" /var/www/html/wp-config.php
+    sed -i "s/username_here/$DATABASE_USER/" /var/www/html/wp-config.php
+    sed -i "s/password_here/$DATABASE_PASSWORD/" /var/www/html/wp-config.php
 
     # replace generic salt values
     curl -s https://api.wordpress.org/secret-key/1.1/salt >> /usr/local/src/wp.keys
