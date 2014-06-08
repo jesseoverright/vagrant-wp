@@ -1,0 +1,7 @@
+#!/bin/bash
+# load database settings
+. /vagrant/settings.sh
+
+# dump database into database.sql
+mysqldump -u$DATABASE_USER -p$DATABASE_PASSWORD $DATABASE_NAME > /vagrant/database.sql
+echo "Database $DATABASE_NAME successfully backed up."

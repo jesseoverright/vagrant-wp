@@ -23,5 +23,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # set write permissions for wordpress
   config.vm.synced_folder ".", "/vagrant", :mount_options => ['dmode=774','fmode=775']
+
+  # register vagrant trigger to backup database on 'vagrant destroy'
+  if defined? VagrantPlugins::Triggers
+    config.trigger.before :destroy, :stdout => true do
+      run "vagrant ssh -c 'db_backup'"
+    end
+  end
   
 end

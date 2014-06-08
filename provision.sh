@@ -1,15 +1,11 @@
 #! /usr/bin/env bash
 
-# variables passed from Vagrantfile
-MYSQL_PASSWORD="rootpass"
-DATABASE_USER="mysqldb"
-DATABASE_PASSWORD="mysqldb"
-DATABASE_DB="mysqldb"
-SERVERNAME="lamp.dev"
+# load database settings
+. /vagrant/settings.sh
 
 # set mysql root password
-echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_PASSWORD" | debconf-set-selections
-echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_PASSWORD" | debconf-set-selections
+echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
+echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
 
 # install apache, mysql, php
 apt-get update
@@ -63,24 +59,32 @@ fi
 # set up the database
 if [ ! -f /var/log/databasesetup ];
 then
-    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE USER '$DATABASE_USER'@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD'"
-    mysql -uroot -p$MYSQL_PASSWORD -e "CREATE DATABASE $DATABASE_DB"
-    mysql -uroot -p$MYSQL_PASSWORD -e "GRANT ALL ON $DATABASE_DB.* TO '$DATABASE_USER'@'localhost'"
-    mysql -uroot -p$MYSQL_PASSWORD -e "flush privileges"
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE USER '$DATABASE_USER'@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD'"
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE $DATABASE_NAME"
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL ON $DATABASE_NAME.* TO '$DATABASE_USER'@'localhost'"
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "flush privileges"
 
     touch /var/log/databasesetup
 
     if [ -f /vagrant/database.sql ];
     then
-        mysql -uroot -p$MYSQL_PASSWORD $DATABASE_DB < /vagrant/database.sql
+        mysql -uroot -p$MYSQL_ROOT_PASSWORD $DATABASE_NAME < /vagrant/database.sql
+    fi
+
+    # add db_backup to bin
+    if [ -f /vagrant/db_backup ]; then
+        if [ ! -d /home/vagrant/bin ]; then
+            mkdir /home/vagrant/bin
+        fi
+        ln -fs /vagrant/db_backup /home/vagrant/bin/db_backup
     fi
 fi
 
 # configure phpmyadmin
 echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/app-password-confirm password $MYSQL_PASSWORD" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/admin-pass password $MYSQL_PASSWORD" | debconf-set-selections
-echo "phpmyadmin phpmyadmin/mysql/app-pass password $MYSQL_PASSWORD" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/app-password-confirm password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/admin-pass password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/app-pass password $MYSQL_ROOT_PASSWORD" | debconf-set-selections
 echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf-set-selections
 
 export DEBIAN_FRONTEND=noninteractive
