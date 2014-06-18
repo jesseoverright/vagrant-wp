@@ -69,10 +69,7 @@ then
 
     # add db_backup to bin
     if [ -f /vagrant/db_backup ]; then
-        if [ ! -d /home/vagrant/bin ]; then
-            mkdir /home/vagrant/bin
-        fi
-        ln -fs /vagrant/db_backup /home/vagrant/bin/db_backup
+        ln -fs /vagrant/db_backup /usr/local/bin/db_backup
     fi
 fi
 
@@ -109,7 +106,7 @@ then
     sed -i '/#@-/r /usr/local/src/wp.keys' /var/www/html/wp-config.php
     sed -i "/#@+/,/#@-/d" /var/www/html/wp-config.php
 
-    # creat htaccess?
+    # create htaccess with permalinks enabled
     echo "
     # BEGIN WordPress
     <IfModule mod_rewrite.c>
