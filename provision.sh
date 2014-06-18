@@ -130,6 +130,12 @@ then
         rm -rf /var/www/html/wp-content
         ln -fs /vagrant/wp-content /var/www/html/wp-content
     fi
+
+    # install wordpress cli
+    curl -Os https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    chmod +x wp-cli.phar
+    mv wp-cli.phar /usr/local/bin/wp
+
 fi
 
 
