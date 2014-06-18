@@ -121,6 +121,9 @@ then
     # END WordPress
     " >> /var/www/html/.htaccess
 
+    # change permissions of wordpress to vagrant user
+    chown -R vagrant:vagrant /var/www/html
+
     # symlink uploads folder
     if [ -d /vagrant/wp-content ];
     then
