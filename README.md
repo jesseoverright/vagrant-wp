@@ -13,13 +13,15 @@ Vagrant-WP will automatically install the latest version of Wordpress and config
 
 ### WP Database
 
-Vagrant-WP will import `database.sql` from the parent directory into the database if the file exists. You can change the wordpress database credentials by editing the variables in `provision.sh`.
+Vagrant-WP will import `database.sql` from the parent directory into the database if the file exists. You can change the wordpress database credentials by editing the variables in `settings.sh`.
 
 If the Vagrant Triggers plugin has been installed, Vagrant will automatically backup the database into `database.sql` when you issue the `vagrant destroy` command.
 
 ### wp-content
 
 Vagrant-WP will automatically sync a `wp-content` folder from the parent directory into the WordPress base folder.  This will allow you to add plugins, themes, or uploads content automatically to the development environment.
+
+If a `wp-content` folder doesn't exist, Vagrant-WP will clone the standard wp-content folder from Wordpress.
 
 ## Build
 
@@ -37,7 +39,9 @@ Vagrant-WP creates a Ubuntu 14.04 LTS (Trusty Tahr) development server with the 
 - MySQL 5.5
 - PHP 5.5.9
 - PhpMyAdmin
+- Composer
 - Git
 - Curl
 - Wordpress
+- Wordpress CLI
 

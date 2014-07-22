@@ -82,10 +82,7 @@ then
 
     # add db_backup to bin
     if [ -f /vagrant/db_backup ]; then
-        if [ ! -d /home/vagrant/bin ]; then
-            mkdir /home/vagrant/bin
-        fi
-        ln -fs /vagrant/db_backup /home/vagrant/bin/db_backup
+        ln -fs /vagrant/db_backup /usr/local/bin/db_backup
     fi
 fi
 
@@ -102,7 +99,55 @@ apt-get install -y phpmyadmin
 # install wordpress
 if [ "$INSTALL_WORDPRESS" == true ];
 then
-    touch /var/log/wordpresssetup
+    # install latest wordpress from git repo
+    rm -rf /var/www/html
+    git clone https://github.com/WordPress/WordPress /var/www/html
+
+    cd /var/www/html
+    latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
+    git checkout tags/$latestTag
+
+    # create wp-config
+    cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
+
+    sed -i "s/database_name_here/$DATABASE_NAME/" /var/www/html/wp-config.php
+    sed -i "s/username_here/$DATABASE_USER/" /var/www/html/wp-config.php
+    sed -i "s/password_here/$DATABASE_PASSWORD/" /var/www/html/wp-config.php
+
+    # replace generic salt values
+    curl -s https://api.wordpress.org/secret-key/1.1/salt >> /usr/local/src/wp.keys
+    sed -i '/#@-/r /usr/local/src/wp.keys' /var/www/html/wp-config.php
+    sed -i "/#@+/,/#@-/d" /var/www/html/wp-config.php
+
+    # create htaccess with permalinks enabled
+    echo "
+    # BEGIN WordPress
+    <IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteRule ^index\.php$ - [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . /index.php [L]
+    </IfModule>
+
+    # END WordPress
+    " >> /var/www/html/.htaccess
+
+    # change permissions of wordpress to vagrant user
+    chown -R vagrant:vagrant /var/www/html
+
+    # symlink uploads folder
+    if [ -d /vagrant/wp-content ];
+    then
+        rm -rf /var/www/html/wp-content
+        ln -fs /vagrant/wp-content /var/www/html/wp-content
+    fi
+
+    # install wordpress cli
+    curl -Os https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    chmod +x wp-cli.phar
+    mv wp-cli.phar /usr/local/bin/wp
 else
     # symlink www folder
     rm -rf /var/www/html
