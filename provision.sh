@@ -9,23 +9,28 @@ echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_ROOT_PAS
 
 # install apache, mysql, php
 apt-get update
-apt-get install -y apache2 mysql-server-5.5 php5-mysql php5 php5-mcrypt git curl
+apt-get install -y apache2 mysql-server-5.5 php5-mysql php5 php5-mcrypt php5-xdebug git curl
 
 # configure Apache
 if [ ! -f /var/log/apachesetup ];
 then
     # add www-data to vagrant group
     usermod -a -G vagrant www-data
+
+    # create vhost
+    cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/$SERVERNAME.conf
+    a2dissite 000-default
+    a2ensite $SERVERNAME
     
     # enable mod rewrite
     a2enmod rewrite
-    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n        <Directory "\/var\/www\/html">\n            AllowOverride All\n        <\/Directory>/' /etc/apache2/sites-available/000-default.conf
+    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\n        <Directory "\/var\/www\/html">\n            AllowOverride All\n        <\/Directory>/' /etc/apache2/sites-available/$SERVERNAME.conf
 
     # configure ServerName
     echo "ServerName $SERVERNAME" >> /etc/apache2/conf-available/servername.conf
     a2enconf servername
 
-    sed -i "s/#ServerName www.example.com/ServerName $SERVERNAME/" /etc/apache2/sites-available/000-default.conf
+    sed -i "s/#ServerName www.example.com/ServerName $SERVERNAME/" /etc/apache2/sites-available/$SERVERNAME.conf
 
     touch /var/log/apachesetup
 fi
@@ -44,6 +49,14 @@ then
     # turn on error reporting
     sed -i 's/error_reporting = .*/error_reporting = E_ALL/' /etc/php5/apache2/php.ini
     sed -i 's/display_errors = .*/display_errors = On/' /etc/php5/apache2/php.ini
+
+    #configure xdebug
+    echo "zend_extension=xdebug.so
+    xdebug.remote_enable=1
+    xdebug.remote_handler=dbgp
+    xdebug.remote_host=$SERVERNAME
+    xdebug.remote_port=9000
+    xdebug.remote_log=\"/var/log/xdebug/xdebug.log\"" > /etc/php5/mods-available/xdebug.ini
 
     # install composer
     curl -sS https://getcomposer.org/installer | php
@@ -83,8 +96,8 @@ echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf
 export DEBIAN_FRONTEND=noninteractive
 apt-get install -y phpmyadmin 
 
-# configure wordpress
-if [ ! -f /var/www/html/wp-config.php ];
+# install wordpress
+if [ "$INSTALL_WORDPRESS" == true ];
 then
     # install latest wordpress from git repo
     rm -rf /var/www/html
@@ -135,9 +148,11 @@ then
     curl -Os https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
     chmod +x wp-cli.phar
     mv wp-cli.phar /usr/local/bin/wp
-
+else
+    # symlink www folder
+    rm -rf /var/www/html
+    ln -fs /vagrant/www /var/www/html
 fi
-
 
 # restart apache
 sudo service apache2 restart
