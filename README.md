@@ -9,7 +9,9 @@ Your machine needs to have [VirtualBox](http://www.virtualbox.org) and [Vagrant]
 
 ## Configuring WordPress
 
-Vagrant-WP will automatically install the latest version of Wordpress and configure wp-config.php. It will create a `wordpress` user with password `wordpress` and database `wordpress`.  The mysql root account password is set to `rootpass`.
+Vagrant-WP will automatically install the latest version of Wordpress and configure wp-config.php. It will create a `wordpress` user with password `wordpress` and database `wordpress`.  The mysql root account password is set to `rootpass`. 
+
+If you would rather manually install wordpress, change the `INSTALL_WORDPRESS` variable in `settings.sh` to `false`.
 
 ### WP Database
 
@@ -22,6 +24,8 @@ If the Vagrant Triggers plugin has been installed, Vagrant will automatically ba
 Vagrant-WP will automatically sync a `wp-content` folder from the parent directory into the WordPress base folder.  This will allow you to add plugins, themes, or uploads content automatically to the development environment.
 
 If a `wp-content` folder doesn't exist, Vagrant-WP will clone the standard wp-content folder from Wordpress.
+
+If `INSTALL_WORDPRESS` is set to `false`, Vagrant-wp will symlink the www folder to the webroot.
 
 ## Build
 
