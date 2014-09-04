@@ -148,6 +148,22 @@ then
     curl -Os https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
     chmod +x wp-cli.phar
     mv wp-cli.phar /usr/local/bin/wp
+
+    # configure wordpress cli packages with composer
+    mkdir /home/vagrant/.wp-cli
+    cd /home/vagrant/.wp-cli
+    composer init --stability dev --no-interaction
+    composer config bin-dir bin
+    composer config vendor-dir vendor
+
+    composer config repositories.wp-cli composer 'http://wp-cli.org/package-index/'
+
+    touch /home/vagrant/.wp-cli/config.yml
+    echo "require:
+    - vendor/autoload.php" >> /home/vagrant/.wp-cli/config.yml
+
+    # install dictator
+    composer require danielbachhuber/dictator=dev-master
 else
     # symlink www folder
     rm -rf /var/www/html
